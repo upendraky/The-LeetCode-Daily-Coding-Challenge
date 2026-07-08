@@ -1,0 +1,57 @@
+class Solution {
+    public int[] sumAndMultiply(String s, int[][] queries) {
+        int m = s.length();
+        long MOD = 1_000_000_007L;
+        
+        // Prefix arrays
+        long[] prefSum = new long[m + 1];
+        int[] prefCnt = new int[m + 1];
+        long[] prefVal = new long[m + 1];
+        long[] pow10 = new long[m + 1];
+        
+        // Precompute powers of 10 modulo 10^9 + 7
+        pow10[0] = 1;
+        for (int i = 1; i <= m; i++) {
+            pow10[i] = (pow10[i - 1] * 10) % MOD;
+        }
+        
+        // Build prefix arrays
+        for (int i = 0; i < m; i++) {
+            int digit = s.charAt(i) - '0';
+            
+            prefSum[i + 1] = prefSum[i] + digit;
+            prefCnt[i + 1] = prefCnt[i] + (digit != 0 ? 1 : 0);
+            
+            if (digit != 0) {
+                prefVal[i + 1] = (prefVal[i] * 10 + digit) % MOD;
+            } else {
+                prefVal[i + 1] = prefVal[i];
+            }
+        }
+        
+        // Process queries
+        int numQueries = queries.length;
+        int[] answer = new int[numQueries];
+        
+        for (int i = 0; i < numQueries; i++) {
+            int l = queries[i][0];
+            int r = queries[i][1];
+            
+            // 1. Get the sum of digits in the substring
+            long sum = prefSum[r + 1] - prefSum[l];
+            
+            // 2. Get the count of non-zero digits in this range
+            int cnt = prefCnt[r + 1] - prefCnt[l];
+            
+            // 3. Extract the integer x formed by the range
+            long substractValue = (prefVal[l] * pow10[cnt]) % MOD;
+            long x = (prefVal[r + 1] - substractValue + MOD) % MOD;
+            
+            // 4. Compute final answer modulo 10^9 + 7
+            long res = (x * (sum % MOD)) % MOD;
+            answer[i] = (int) res;
+        }
+        
+        return answer;
+    }
+}
