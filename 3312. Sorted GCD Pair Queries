@@ -1,0 +1,70 @@
+class Solution {
+    public int[] gcdValues(int[] nums, long[] queries) {
+        int max = 0;
+
+        for (int num : nums) {
+            max = Math.max(max, num);
+        }
+
+        // frequency[x] = number of occurrences of x
+        int[] frequency = new int[max + 1];
+
+        for (int num : nums) {
+            frequency[num]++;
+        }
+
+        // gcdCount[g] = number of pairs whose GCD is exactly g
+        long[] gcdCount = new long[max + 1];
+
+        // Process from larger GCD to smaller GCD
+        for (int g = max; g >= 1; g--) {
+
+            // Count numbers divisible by g
+            long divisible = 0;
+
+            for (int multiple = g; multiple <= max; multiple += g) {
+                divisible += frequency[multiple];
+            }
+
+            // All pairs where both numbers are divisible by g
+            gcdCount[g] = divisible * (divisible - 1) / 2;
+
+            // Remove pairs whose exact GCD is a multiple of g
+            for (int multiple = 2 * g; multiple <= max; multiple += g) {
+                gcdCount[g] -= gcdCount[multiple];
+            }
+        }
+
+        // Convert exact counts into prefix counts
+        // gcdCount[g] = number of pairs having GCD <= g
+        for (int g = 1; g <= max; g++) {
+            gcdCount[g] += gcdCount[g - 1];
+        }
+
+        int[] answer = new int[queries.length];
+
+        for (int i = 0; i < queries.length; i++) {
+            answer[i] = binarySearch(gcdCount, queries[i]);
+        }
+
+        return answer;
+    }
+
+    private int binarySearch(long[] prefix, long query) {
+        int left = 1;
+        int right = prefix.length - 1;
+
+        while (left < right) {
+            int mid = left + (right - left) / 2;
+
+            // query is 0-indexed, so we need count > query
+            if (prefix[mid] > query) {
+                right = mid;
+            } else {
+                left = mid + 1;
+            }
+        }
+
+        return left;
+    }
+}
