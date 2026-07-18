@@ -1,0 +1,21 @@
+class Solution {
+    public int findGCD(int[] nums) {
+        int min = Integer.MAX_VALUE;
+        int max = Integer.MIN_VALUE;
+        
+        // Step 1: Find min and max
+        for (int num : nums) {
+            min = Math.min(min, num);
+            max = Math.max(max, num);
+        }
+        
+        // Step 2: Return GCD
+        return gcd(min, max);
+    }
+    
+    // Euclidean Algorithm
+    private int gcd(int a, int b) {
+        if (b == 0) return a;
+        return gcd(b, a % b);
+    }
+}
