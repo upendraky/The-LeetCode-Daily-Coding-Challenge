@@ -1,0 +1,61 @@
+class Solution {
+    public int[] validSequence(String word1, String word2) {
+        int n = word1.length();
+        int m = word2.length();
+        int INF = n;
+
+        // next[i][c] = first occurrence of character c at or after index i
+        int[][] next = new int[n + 1][26];
+        for (int c = 0; c < 26; c++) next[n][c] = INF;
+
+        for (int i = n - 1; i >= 0; i--) {
+            System.arraycopy(next[i + 1], 0, next[i], 0, 26);
+            next[i][word1.charAt(i) - 'a'] = i;
+        }
+
+        // backPos[j] = index used for word2[j] in the latest possible exact match
+        int[] backPos = new int[m];
+        java.util.Arrays.fill(backPos, -1);
+
+        int idx = n - 1;
+        for (int j = m - 1; j >= 0; j--) {
+            while (idx >= 0 && word1.charAt(idx) != word2.charAt(j)) {
+                idx--;
+            }
+            if (idx < 0) break;
+            backPos[j] = idx;
+            idx--;
+        }
+
+        int[] ans = new int[m];
+        int p = 0;
+        boolean usedMismatch = false;
+
+        for (int j = 0; j < m; j++) {
+            int matchIdx = next[p][word2.charAt(j) - 'a'];
+
+            // Try to use the single mismatch as early as possible
+            if (!usedMismatch && p < n && word1.charAt(p) != word2.charAt(j)) {
+                boolean ok = (p <= n - (m - j));
+
+                if (j < m - 1) {
+                    ok &= (backPos[j + 1] != -1 && backPos[j + 1] > p);
+                }
+
+                if (ok) {
+                    ans[j] = p;
+                    usedMismatch = true;
+                    p++;
+                    continue;
+                }
+            }
+
+            if (matchIdx == INF) return new int[0];
+
+            ans[j] = matchIdx;
+            p = matchIdx + 1;
+        }
+
+        return ans;
+    }
+}
