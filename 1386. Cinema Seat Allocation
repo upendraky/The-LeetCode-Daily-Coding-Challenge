@@ -1,0 +1,54 @@
+import java.util.*;
+
+class Solution {
+    public int maxNumberOfFamilies(int n, int[][] reservedSeats) {
+
+        // Store reserved seats for only the rows that matter.
+        Map<Integer, Integer> map = new HashMap<>();
+
+        for (int[] seat : reservedSeats) {
+            int row = seat[0];
+            int col = seat[1];
+
+            // Only seats 2 to 9 affect the three possible blocks.
+            if (col >= 2 && col <= 9) {
+                int mask = map.getOrDefault(row, 0);
+
+                // Convert seat 2..9 to bit positions 0..7
+                mask |= (1 << (col - 2));
+
+                map.put(row, mask);
+            }
+        }
+
+        // Every completely empty row can accommodate 2 groups.
+        long answer = (long) (n - map.size()) * 2;
+
+        // Masks for the three blocks.
+        // seat 2,3,4,5 -> bits 0,1,2,3
+        int left = 0b00001111;
+
+        // seat 4,5,6,7 -> bits 2,3,4,5
+        int middle = 0b00111100;
+
+        // seat 6,7,8,9 -> bits 4,5,6,7
+        int right = 0b11110000;
+
+        for (int mask : map.values()) {
+
+            boolean canUseLeft = (mask & left) == 0;
+            boolean canUseMiddle = (mask & middle) == 0;
+            boolean canUseRight = (mask & right) == 0;
+
+            if (canUseLeft && canUseRight) {
+                // Two non-overlapping groups.
+                answer += 2;
+            } else if (canUseLeft || canUseMiddle || canUseRight) {
+                // At least one group can be placed.
+                answer += 1;
+            }
+        }
+
+        return (int) answer;
+    }
+}
