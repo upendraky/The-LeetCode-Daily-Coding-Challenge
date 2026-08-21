@@ -1,0 +1,89 @@
+class Solution {
+
+    public long findKthSmallest(int[] coins, int k) {
+        long lo = 1;
+        long hi = (long) getMin(coins) * k;
+
+        while (lo < hi) {
+            long mid = lo + (hi - lo) / 2;
+
+            if (count(mid, coins) >= k) {
+                hi = mid;
+            } else {
+                lo = mid + 1;
+            }
+        }
+
+        return lo;
+    }
+
+    private long count(long x, int[] coins) {
+        int n = coins.length;
+        long ans = 0;
+
+        for (int mask = 1; mask < (1 << n); mask++) {
+            long lcm = 1;
+            int bits = 0;
+            boolean tooLarge = false;
+
+            for (int i = 0; i < n; i++) {
+                if ((mask & (1 << i)) != 0) {
+                    bits++;
+
+                    lcm = lcmCap(lcm, coins[i], x);
+
+                    if (lcm > x) {
+                        tooLarge = true;
+                        break;
+                    }
+                }
+            }
+
+            if (tooLarge) {
+                continue;
+            }
+
+            long multiples = x / lcm;
+
+            if ((bits & 1) == 1) {
+                ans += multiples;
+            } else {
+                ans -= multiples;
+            }
+        }
+
+        return ans;
+    }
+
+    private long lcmCap(long a, long b, long cap) {
+        long g = gcd(a, b);
+
+        // Check overflow before multiplication.
+        if (a / g > cap / b) {
+            return cap + 1;
+        }
+
+        long lcm = (a / g) * b;
+
+        return lcm > cap ? cap + 1 : lcm;
+    }
+
+    private long gcd(long a, long b) {
+        while (b != 0) {
+            long temp = a % b;
+            a = b;
+            b = temp;
+        }
+        return a;
+    }
+
+    private int getMin(int[] coins) {
+        int min = coins[0];
+
+        for (int coin : coins) {
+            min = Math.min(min, coin);
+        }
+
+        return min;
+    }
+}
