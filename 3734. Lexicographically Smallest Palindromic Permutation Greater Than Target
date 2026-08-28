@@ -1,0 +1,134 @@
+class Solution {
+    public String lexPalindromicPermutation(String s, String target) {
+        int n = s.length();
+
+        int[] count = new int[26];
+
+        for (char c : s.toCharArray()) {
+            count[c - 'a']++;
+        }
+
+        int odd = 0;
+        char middle = 0;
+
+        for (int i = 0; i < 26; i++) {
+            if (count[i] % 2 == 1) {
+                odd++;
+                middle = (char) ('a' + i);
+            }
+        }
+
+        if (odd > 1) {
+            return "";
+        }
+
+        int halfLength = n / 2;
+        int[] halfCount = new int[26];
+
+        for (int i = 0; i < 26; i++) {
+            halfCount[i] = count[i] / 2;
+        }
+
+        StringBuilder prefix = new StringBuilder();
+        int[] remaining = halfCount.clone();
+
+        // Match target's first half as much as possible
+        for (int i = 0; i < halfLength; i++) {
+            int c = target.charAt(i) - 'a';
+
+            if (remaining[c] == 0) {
+                break;
+            }
+
+            prefix.append(target.charAt(i));
+            remaining[c]--;
+        }
+
+        // Check if the exact first half gives a palindrome > target
+        if (prefix.length() == halfLength) {
+            String candidate = buildPalindrome(
+                prefix.toString(),
+                middle,
+                n
+            );
+
+            if (candidate.compareTo(target) > 0) {
+                return candidate;
+            }
+        }
+
+        // Backtrack and increase one position
+        int matched = prefix.length();
+
+        for (int pos = matched; pos >= 0; pos--) {
+
+            remaining = halfCount.clone();
+
+            // Keep prefix before current position
+            for (int i = 0; i < pos; i++) {
+                remaining[prefix.charAt(i) - 'a']--;
+            }
+
+            int targetChar = target.charAt(pos) - 'a';
+
+            // Try the smallest character greater than target[pos]
+            for (int c = targetChar + 1; c < 26; c++) {
+
+                if (remaining[c] == 0) {
+                    continue;
+                }
+
+                StringBuilder left = new StringBuilder();
+
+                // Keep prefix
+                for (int i = 0; i < pos; i++) {
+                    left.append(prefix.charAt(i));
+                }
+
+                // Put a larger character here
+                left.append((char) ('a' + c));
+                remaining[c]--;
+
+                // Fill the rest with smallest characters
+                for (int x = 0; x < 26; x++) {
+                    while (remaining[x] > 0) {
+                        left.append((char) ('a' + x));
+                        remaining[x]--;
+                    }
+                }
+
+                String candidate = buildPalindrome(
+                    left.toString(),
+                    middle,
+                    n
+                );
+
+                if (candidate.compareTo(target) > 0) {
+                    return candidate;
+                }
+            }
+        }
+
+        return "";
+    }
+
+    private String buildPalindrome(
+        String left,
+        char middle,
+        int n
+    ) {
+        StringBuilder result = new StringBuilder();
+
+        result.append(left);
+
+        if (n % 2 == 1) {
+            result.append(middle);
+        }
+
+        for (int i = left.length() - 1; i >= 0; i--) {
+            result.append(left.charAt(i));
+        }
+
+        return result.toString();
+    }
+}
