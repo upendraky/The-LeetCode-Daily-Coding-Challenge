@@ -1,0 +1,21 @@
+class Solution {
+    public int distinctSubseqII(String s) {
+        final long MOD = 1_000_000_007;
+
+        long dp = 1; // includes empty subsequence
+        long[] last = new long[26];
+
+        for (char c : s.toCharArray()) {
+            int index = c - 'a';
+
+            long oldDp = dp;
+
+            dp = (2 * dp - last[index] + MOD) % MOD;
+
+            last[index] = oldDp;
+        }
+
+        // Remove the empty subsequence
+        return (int) ((dp - 1 + MOD) % MOD);
+    }
+}
