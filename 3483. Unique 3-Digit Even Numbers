@@ -1,0 +1,47 @@
+class Solution {
+public int totalNumbers(int[] digits) {
+
+    int[] freq = new int[10];
+
+    // Count occurrences of each digit
+    for (int digit : digits) {
+        freq[digit]++;
+    }
+
+    int count = 0;
+
+    // Check every 3-digit number
+    for (int num = 100; num <= 999; num++) {
+
+        // Number must be even
+        if (num % 2 != 0) {
+            continue;
+        }
+
+        int a = num / 100;          // hundreds digit
+        int b = (num / 10) % 10;    // tens digit
+        int c = num % 10;           // units digit
+
+        // Use a copy of frequencies
+        int[] temp = freq.clone();
+
+        // Try to use hundreds digit
+        temp[a]--;
+
+        // Try to use tens digit
+        temp[b]--;
+
+        // Try to use units digit
+        temp[c]--;
+
+        // If all digits were available
+        if (temp[a] >= 0 && temp[b] >= 0 && temp[c] >= 0) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+
+}
