@@ -1,0 +1,62 @@
+class Solution {
+
+public long minimumTotalDistance(List<Integer> robot,
+                                 int[][] factory) {
+
+    // Sort robots
+    Collections.sort(robot);
+
+    // Sort factories by position
+    Arrays.sort(factory, (a, b) -> Integer.compare(a[0], b[0]));
+
+    int n = robot.size();
+
+    // dp[i] = minimum cost to repair first i robots
+    long[] dp = new long[n + 1];
+
+    Arrays.fill(dp, Long.MAX_VALUE / 4);
+    dp[0] = 0;
+
+    // Process each factory
+    for (int[] f : factory) {
+
+        int position = f[0];
+        int limit = f[1];
+
+        long[] newDp = new long[n + 1];
+
+        Arrays.fill(newDp, Long.MAX_VALUE / 4);
+
+        // Current factory repairs 0 robots
+        for (int i = 0; i <= n; i++) {
+
+            if (dp[i] == Long.MAX_VALUE / 4) {
+                continue;
+            }
+
+            long cost = 0;
+
+            // Current factory repairs k additional robots
+            for (int k = 0; k <= limit && i + k <= n; k++) {
+
+                if (k > 0) {
+                    cost += Math.abs(
+                        (long) robot.get(i + k - 1) - position
+                    );
+                }
+
+                newDp[i + k] = Math.min(
+                    newDp[i + k],
+                    dp[i] + cost
+                );
+            }
+        }
+
+        dp = newDp;
+    }
+
+    return dp[n];
+}
+
+
+}
