@@ -1,0 +1,137 @@
+import java.util.*;
+
+class Solution {
+
+```
+static class Node {
+    long score;
+    List<Integer> indices;
+
+    Node(long score, List<Integer> indices) {
+        this.score = score;
+        this.indices = indices;
+    }
+}
+
+int n;
+int[][] arr;
+int[] next;
+Node[][] dp;
+
+public int[] maximumWeight(List<List<Integer>> intervals) {
+
+    n = intervals.size();
+    arr = new int[n][4];
+
+    for (int i = 0; i < n; i++) {
+        arr[i][0] = intervals.get(i).get(0); // left
+        arr[i][1] = intervals.get(i).get(1); // right
+        arr[i][2] = intervals.get(i).get(2); // weight
+        arr[i][3] = i;                       // original index
+    }
+
+    // Sort by left endpoint.
+    Arrays.sort(arr, (a, b) -> {
+        if (a[0] != b[0]) {
+            return Integer.compare(a[0], b[0]);
+        }
+        return Integer.compare(a[1], b[1]);
+    });
+
+    // Find the first interval whose left endpoint > current right endpoint.
+    next = new int[n];
+
+    for (int i = 0; i < n; i++) {
+        next[i] = findNext(i + 1, arr[i][1]);
+    }
+
+    dp = new Node[n + 1][5];
+
+    // DP from right to left.
+    for (int i = n; i >= 0; i--) {
+        for (int k = 0; k <= 4; k++) {
+
+            if (i == n || k == 0) {
+                dp[i][k] = new Node(0, new ArrayList<>());
+                continue;
+            }
+
+            // Option 1: skip current interval.
+            Node skip = dp[i + 1][k];
+
+            // Option 2: take current interval.
+            Node takeNext = dp[next[i]][k - 1];
+
+            List<Integer> takeIndices = new ArrayList<>(takeNext.indices);
+            takeIndices.add(arr[i][3]);
+
+            Collections.sort(takeIndices);
+
+            Node take = new Node(
+                    arr[i][2] + takeNext.score,
+                    takeIndices
+            );
+
+            dp[i][k] = better(skip, take);
+        }
+    }
+
+    List<Integer> answer = dp[0][4].indices;
+
+    int[] result = new int[answer.size()];
+
+    for (int i = 0; i < answer.size(); i++) {
+        result[i] = answer.get(i);
+    }
+
+    return result;
+}
+
+// First index j such that arr[j][0] > right.
+private int findNext(int start, int right) {
+
+    int low = start;
+    int high = n;
+
+    while (low < high) {
+
+        int mid = low + (high - low) / 2;
+
+        if (arr[mid][0] > right) {
+            high = mid;
+        } else {
+            low = mid + 1;
+        }
+    }
+
+    return low;
+}
+
+// Return the solution with:
+// 1. Larger score
+// 2. Lexicographically smaller indices on tie
+private Node better(Node a, Node b) {
+
+    if (a.score != b.score) {
+        return a.score > b.score ? a : b;
+    }
+
+    return compareLexicographically(a.indices, b.indices) <= 0 ? a : b;
+}
+
+private int compareLexicographically(List<Integer> a, List<Integer> b) {
+
+    int len = Math.min(a.size(), b.size());
+
+    for (int i = 0; i < len; i++) {
+
+        if (!a.get(i).equals(b.get(i))) {
+            return Integer.compare(a.get(i), b.get(i));
+        }
+    }
+
+    return Integer.compare(a.size(), b.size());
+}
+```
+
+}
