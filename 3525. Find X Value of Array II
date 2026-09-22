@@ -1,0 +1,145 @@
+import java.util.*;
+
+class Solution {
+    private int n;
+    private int k;
+    private int[] treeProd;
+    private int[] treeRemain;
+
+    // Helper method to merge left and right child information into parent node
+    private void merge(int parentIdx, int leftIdx, int rightIdx) {
+        int leftProd = treeProd[leftIdx];
+        int rightProd = treeProd[rightIdx];
+        treeProd[parentIdx] = (leftProd * rightProd) % k;
+
+        int pStart = parentIdx * k;
+        int lStart = leftIdx * k;
+        int rStart = rightIdx * k;
+
+        // Reset parent counts
+        for (int r = 0; r < k; r++) {
+            treeRemain[pStart + r] = 0;
+        }
+
+        // 1. Copy left prefix counts directly
+        for (int r = 0; r < k; r++) {
+            treeRemain[pStart + r] += treeRemain[lStart + r];
+        }
+
+        // 2. Extend right prefix counts shifted by leftProd
+        for (int r = 0; r < k; r++) {
+            int count = treeRemain[rStart + r];
+            if (count > 0) {
+                int newRem = (leftProd * r) % k;
+                treeRemain[pStart + newRem] += count;
+            }
+        }
+    }
+
+    private void build(int[] nums, int node, int start, int end) {
+        if (start == end) {
+            int valMod = nums[start] % k;
+            treeProd[node] = valMod;
+            treeRemain[node * k + valMod] = 1;
+            return;
+        }
+        int mid = start + (end - start) / 2;
+        build(nums, 2 * node, start, mid);
+        build(nums, 2 * node + 1, mid + 1, end);
+        merge(node, 2 * node, 2 * node + 1);
+    }
+
+    private void update(int node, int start, int end, int idx, int val) {
+        if (start == end) {
+            int valMod = val % k;
+            int nStart = node * k;
+            for (int r = 0; r < k; r++) {
+                treeRemain[nStart + r] = 0;
+            }
+            treeProd[node] = valMod;
+            treeRemain[nStart + valMod] = 1;
+            return;
+        }
+        int mid = start + (end - start) / 2;
+        if (idx <= mid) {
+            update(2 * node, start, mid, idx, val);
+        } else {
+            update(2 * node + 1, mid + 1, end, idx, val);
+        }
+        merge(node, 2 * node, 2 * node + 1);
+    }
+
+    // Custom structure returned by range query simulation
+    private static class QueryResult {
+        int prod;
+        int[] remain;
+
+        QueryResult(int k) {
+            this.prod = 1;
+            this.remain = new int[k];
+        }
+    }
+
+    private QueryResult query(int node, int start, int end, int l, int r) {
+        if (start >= l && end <= r) {
+            QueryResult res = new QueryResult(k);
+            res.prod = treeProd[node];
+            System.arraycopy(treeRemain, node * k, res.remain, 0, k);
+            return res;
+        }
+        int mid = start + (end - start) / 2;
+        if (r <= mid) {
+            return query(2 * node, start, mid, l, r);
+        }
+        if (l > mid) {
+            return query(2 * node + 1, mid + 1, end, l, r);
+        }
+
+        QueryResult leftRes = query(2 * node, start, mid, l, mid);
+        QueryResult rightRes = query(2 * node + 1, mid + 1, end, mid + 1, r);
+
+        QueryResult parentRes = new QueryResult(k);
+        parentRes.prod = (leftRes.prod * rightRes.prod) % k;
+
+        for (int rem = 0; rem < k; rem++) {
+            parentRes.remain[rem] += leftRes.remain[rem];
+        }
+        for (int rem = 0; rem < k; rem++) {
+            int count = rightRes.remain[rem];
+            if (count > 0) {
+                int newRem = (leftRes.prod * rem) % k;
+                parentRes.remain[newRem] += count;
+            }
+        }
+        return parentRes;
+    }
+
+    public int[] resultArray(int[] nums, int k, int[][] queries) {
+        this.n = nums.length;
+        this.k = k;
+        
+        // Flattened representation to minimize memory references and runtime allocations
+        this.treeProd = new int[4 * n];
+        this.treeRemain = new int[4 * n * k];
+
+        build(nums, 1, 0, n - 1);
+
+        int[] result = new int[queries.length];
+
+        for (int i = 0; i < queries.length; i++) {
+            int idx = queries[i][0];
+            int val = queries[i][1];
+            int start = queries[i][2];
+            int x = queries[i][3];
+
+            // Perform persistent point update on segment tree
+            update(1, 0, n - 1, idx, val);
+
+            // Fetch structural data representation within suffix range [start, n - 1]
+            QueryResult resNode = query(1, 0, n - 1, start, n - 1);
+            result[i] = resNode.remain[x];
+        }
+
+        return result;
+    }
+}
