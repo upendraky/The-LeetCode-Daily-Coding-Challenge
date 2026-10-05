@@ -1,0 +1,31 @@
+class Solution {
+    public boolean checkValidString(String s) {
+        int minOpen = 0;
+        int maxOpen = 0;
+        
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            
+            if (c == '(') {
+                minOpen++;
+                maxOpen++;
+            } else if (c == ')') {
+                minOpen--;
+                maxOpen--;
+            } else if (c == '*') {
+                minOpen--; // Treat '*' as ')'
+                maxOpen++; // Treat '*' as '('
+            }
+            
+            if (maxOpen < 0) {
+                return false; // Too many closing parentheses
+            }
+            
+            if (minOpen < 0) {
+                minOpen = 0; // Reset minOpen to 0 as '*' can be empty
+            }
+        }
+        
+        return minOpen == 0;
+    }
+}
